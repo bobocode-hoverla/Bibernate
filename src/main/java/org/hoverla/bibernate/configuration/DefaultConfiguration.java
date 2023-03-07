@@ -23,7 +23,6 @@ public class DefaultConfiguration implements Configuration {
 
     @Override
     public SessionFactory buildSessionFactory() {
-        // TODO: Let user configure session factory builder (expand configuration) ??
         return new DefaultSessionFactoryBuilder().build(this);
     }
 }
