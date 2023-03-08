@@ -16,9 +16,9 @@ import java.util.concurrent.BlockingQueue;
 public class BibariPool {
 
     private final Configuration config;
-    private DataSource ds;
-    private BlockingQueue<Connection> connectionPool;
+    private final BlockingQueue<Connection> connectionPool;
     private final int connectionPoolSize;
+    private DataSource ds;
 
     /**
      * Construct a BibariPool with the specified configuration.
@@ -28,6 +28,7 @@ public class BibariPool {
     public BibariPool(Configuration config) {
         this.config = config;
         this.connectionPoolSize = config.getPoolSize();
+        this.connectionPool = new ArrayBlockingQueue<>(connectionPoolSize);
         initializeDataSource();
         initializePool();
     }
@@ -62,7 +63,6 @@ public class BibariPool {
      * Initialized connection pool by connection wrapper class - WrapperConnection.
      */
     private void initializePool() {
-        this.connectionPool = new ArrayBlockingQueue<>(connectionPoolSize);
         for (int i = 0; i < connectionPoolSize; i++) {
             connectionPool.add(new WrapperConnection(retrieveConnectionFromDataSource(), connectionPool));
         }

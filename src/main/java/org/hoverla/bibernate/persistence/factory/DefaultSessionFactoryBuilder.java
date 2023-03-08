@@ -4,6 +4,8 @@ import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import org.hoverla.bibernate.configuration.Configuration;
 import org.hoverla.bibernate.connectionpool.util.BibariDataSource;
+import org.hoverla.bibernate.exception.ExceptionMessages;
+import org.hoverla.bibernate.exception.datasource.DataSourceNotFoundException;
 
 import javax.sql.DataSource;
 
@@ -22,7 +24,8 @@ public class DefaultSessionFactoryBuilder implements SessionFactoryBuilder {
         } else if (poolProvider == Configuration.ConnPoolProviderType.BIBARI) {
             return configureBibariDataSource(conf);
         }
-        return null;
+        String provider = conf.getPoolProvider().getProvider();
+        throw new DataSourceNotFoundException(String.format(ExceptionMessages.DATA_SOURCE_NOT_FOUND_MSG, provider));
     }
 
     private DataSource configureBibariDataSource(Configuration conf) {

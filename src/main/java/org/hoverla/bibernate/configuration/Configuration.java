@@ -1,6 +1,6 @@
 package org.hoverla.bibernate.configuration;
 
-import org.hoverla.bibernate.connectionpool.exception.ConfigurationException;
+import org.hoverla.bibernate.exception.configuration.ConfigurationException;
 import org.hoverla.bibernate.persistence.factory.SessionFactory;
 
 import java.util.HashMap;

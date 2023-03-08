@@ -1,7 +1,7 @@
-package org.hoverla.bibernate.connectionpool.exception;
+package org.hoverla.bibernate.exception.configuration;
 
 /**
- * Throw this exception when we have troubles with configuration
+ * Exception is thrown when we have troubles with configuration
  */
 public class ConfigurationException extends RuntimeException {
     public ConfigurationException(String msg) {
