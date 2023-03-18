@@ -13,7 +13,7 @@ class ConfigurationTest {
 
     @Test
     void testLoadPropertiesFile() {
-        assertDoesNotThrow(() -> PropertiesUtil.getPropertiesFor(PROPERTIES_FILE));
+        assertDoesNotThrow(() -> PropertiesUtil.getPropertiesFrom(PROPERTIES_FILE));
     }
 
     @Test

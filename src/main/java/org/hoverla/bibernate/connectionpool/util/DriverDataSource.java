@@ -1,6 +1,8 @@
 package org.hoverla.bibernate.connectionpool.util;
 
 import lombok.extern.slf4j.Slf4j;
+import org.hoverla.bibernate.exception.datasource.DriverCannotGetJdbcUrlException;
+import org.hoverla.bibernate.exception.datasource.UnableGetDriverInstanceException;
 
 import javax.sql.DataSource;
 import java.io.PrintWriter;
@@ -27,68 +29,7 @@ public class DriverDataSource implements DataSource {
     public DriverDataSource(String jdbcUrl, String driverClassName, String username, String password) {
         this.jdbcUrl = jdbcUrl;
         this.driverProperties = new Properties();
-
-        if (username != null) {
-            driverProperties.put(USER, driverProperties.getProperty(USER, username));
-        }
-        if (password != null) {
-            driverProperties.put(PASSWORD, driverProperties.getProperty(PASSWORD, password));
-        }
-
-        if (driverClassName != null) {
-            var drivers = DriverManager.getDrivers();
-            while (drivers.hasMoreElements()) {
-                var d = drivers.nextElement();
-                if (d.getClass().getName().equals(driverClassName)) {
-                    driver = d;
-                    break;
-                }
-            }
-
-            if (driver == null) {
-                log.warn("Registered driver with driverClassName={} was not found, trying direct instantiation.", driverClassName);
-                Class<?> driverClass = null;
-                var threadContextClassLoader = Thread.currentThread().getContextClassLoader();
-                try {
-                    if (threadContextClassLoader != null) {
-                        try {
-                            driverClass = threadContextClassLoader.loadClass(driverClassName);
-                            log.debug("Driver class {} found in Thread context class loader {}", driverClassName, threadContextClassLoader);
-                        } catch (ClassNotFoundException e) {
-                            log.debug("Driver class {} not found in Thread context class loader {}, trying classloader {}",
-                                    driverClassName, threadContextClassLoader, this.getClass().getClassLoader());
-                        }
-                    }
-
-                    if (driverClass == null) {
-                        driverClass = this.getClass().getClassLoader().loadClass(driverClassName);
-                        log.debug("Driver class {} found in the Configuration class classloader {}", driverClassName, this.getClass().getClassLoader());
-                    }
-                } catch (ClassNotFoundException e) {
-                    log.debug("Failed to load driver class {} from Configuration class classloader {}", driverClassName, this.getClass().getClassLoader());
-                }
-
-                if (driverClass != null) {
-                    try {
-                        driver = (Driver) driverClass.getDeclaredConstructor().newInstance();
-                    } catch (Exception e) {
-                        log.warn("Failed to create instance of driver class {}, trying jdbcUrl resolution", driverClassName, e);
-                    }
-                }
-            }
-        }
-
-        final var sanitizedUrl = jdbcUrl.replaceAll("([?&;]password=)[^&#;]*(.*)", "$1<masked>$2");
-        try {
-            if (driver == null) {
-                driver = DriverManager.getDriver(jdbcUrl);
-                log.debug("Loaded driver with class name {} for jdbcUrl={}", driver.getClass().getName(), sanitizedUrl);
-            } else if (!driver.acceptsURL(jdbcUrl)) {
-                throw new RuntimeException("Driver " + driverClassName + " claims to not accept jdbcUrl, " + sanitizedUrl);
-            }
-        } catch (SQLException e) {
-            throw new RuntimeException("Failed to get driver instance for jdbcUrl=" + sanitizedUrl, e);
-        }
+        initUnderlyingDriver(jdbcUrl, driverClassName, username, password);
     }
 
     @Override
@@ -145,5 +86,79 @@ public class DriverDataSource implements DataSource {
     @Override
     public boolean isWrapperFor(Class<?> iface) {
         return false;
+    }
+
+    private void initUnderlyingDriver(String jdbcUrl, String driverClassName, String username, String password) {
+        putCredentialInProperties(username, password);
+        findDriverByClassName(driverClassName);
+        findDriverByUrlIfNotFound(jdbcUrl, driverClassName);
+    }
+
+    private void findDriverByUrlIfNotFound(String jdbcUrl, String driverClassName) {
+        final var sanitizedUrl = jdbcUrl.replaceAll("([?&;]password=)[^&#;]*(.*)", "$1<masked>$2");
+        try {
+            if (driver == null) {
+                driver = DriverManager.getDriver(jdbcUrl);
+                log.debug("Loaded driver with class name {} for jdbcUrl={}", driver.getClass().getName(), sanitizedUrl);
+            } else if (!driver.acceptsURL(jdbcUrl)) {
+                throw new DriverCannotGetJdbcUrlException("Driver " + driverClassName + " claims to not accept jdbcUrl, " + sanitizedUrl);
+            }
+        } catch (SQLException e) {
+            throw new UnableGetDriverInstanceException("Failed to get driver instance for jdbcUrl=" + sanitizedUrl, e);
+        }
+    }
+
+    private void putCredentialInProperties(String username, String password) {
+        if (username != null) {
+            driverProperties.put(USER, driverProperties.getProperty(USER, username));
+        }
+        if (password != null) {
+            driverProperties.put(PASSWORD, driverProperties.getProperty(PASSWORD, password));
+        }
+    }
+
+    private void findDriverByClassName(String driverClassName) {
+        if (driverClassName != null) {
+            var drivers = DriverManager.getDrivers();
+            while (drivers.hasMoreElements()) {
+                var foundDriver = drivers.nextElement();
+                if (foundDriver.getClass().getName().equals(driverClassName)) {
+                    driver = foundDriver;
+                    break;
+                }
+            }
+
+            if (driver == null) {
+                log.warn("Registered driver with driverClassName={} was not found, trying direct instantiation.", driverClassName);
+                Class<?> driverClass = null;
+                var threadContextClassLoader = Thread.currentThread().getContextClassLoader();
+                try {
+                    if (threadContextClassLoader != null) {
+                        try {
+                            driverClass = threadContextClassLoader.loadClass(driverClassName);
+                            log.debug("Driver class {} found in Thread context class loader {}", driverClassName, threadContextClassLoader);
+                        } catch (ClassNotFoundException e) {
+                            log.debug("Driver class {} not found in Thread context class loader {}, trying classloader {}",
+                                    driverClassName, threadContextClassLoader, this.getClass().getClassLoader());
+                        }
+                    }
+
+                    if (driverClass == null) {
+                        driverClass = this.getClass().getClassLoader().loadClass(driverClassName);
+                        log.debug("Driver class {} found in the Configuration class classloader {}", driverClassName, this.getClass().getClassLoader());
+                    }
+                } catch (ClassNotFoundException e) {
+                    log.debug("Failed to load driver class {} from Configuration class classloader {}", driverClassName, this.getClass().getClassLoader());
+                }
+
+                if (driverClass != null) {
+                    try {
+                        driver = (Driver) driverClass.getDeclaredConstructor().newInstance();
+                    } catch (Exception e) {
+                        log.warn("Failed to create instance of driver class {}, trying jdbcUrl resolution", driverClassName, e);
+                    }
+                }
+            }
+        }
     }
 }
