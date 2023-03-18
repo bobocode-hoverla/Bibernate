@@ -37,10 +37,7 @@ public interface Configuration {
         properties.put("driver", getDriver());
         properties.entrySet().stream()
                 .filter(entry -> Objects.isNull(entry.getValue()))
-                .findFirst().ifPresent(entry -> {
-                    throw new ConfigurationException(String.format("'%s' property is null. Set up your configuration properly",
-                            entry.getKey()));
-                });
+                .findFirst().ifPresent(Configuration::throwException);
     }
 
     /**
@@ -69,5 +66,10 @@ public interface Configuration {
             }
             throw new IllegalArgumentException("No enum constant for value: " + value);
         }
+    }
+
+    private static void throwException(Map.Entry<String, String> entry) {
+        throw new ConfigurationException(String.format("'%s' property is null. Set up your configuration properly",
+                entry.getKey()));
     }
 }

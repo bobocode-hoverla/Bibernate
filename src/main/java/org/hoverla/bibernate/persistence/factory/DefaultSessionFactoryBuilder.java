@@ -28,7 +28,7 @@ public class DefaultSessionFactoryBuilder implements SessionFactoryBuilder {
         throw new DataSourceNotFoundException(String.format(ExceptionMessages.DATA_SOURCE_NOT_FOUND_MSG, provider));
     }
 
-    private DataSource configureBibariDataSource(Configuration conf) {
+    private DataSource configureBibariDataSource(final Configuration conf) {
         return new BibariDataSource(conf);
     }
 

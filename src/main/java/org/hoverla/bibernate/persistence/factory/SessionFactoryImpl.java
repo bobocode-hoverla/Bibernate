@@ -1,5 +1,8 @@
 package org.hoverla.bibernate.persistence.factory;
 
+import org.hoverla.bibernate.persistence.session.Session;
+import org.hoverla.bibernate.persistence.session.SessionImpl;
+
 import javax.sql.DataSource;
 
 public class SessionFactoryImpl implements SessionFactory {
@@ -10,20 +13,9 @@ public class SessionFactoryImpl implements SessionFactory {
         this.dataSource = dataSource;
     }
 
-   /*
-
-    Will use datasource
-    Our or hikari
-    This datasource will be giving connections
-    Session is wrapper of connection
-
-    ...
-
-     */
-
     @Override
     public Session openSession() {
-        return null;
+        return new SessionImpl(dataSource);
     }
 
     @Override

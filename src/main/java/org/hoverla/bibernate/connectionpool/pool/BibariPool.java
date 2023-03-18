@@ -1,7 +1,9 @@
 package org.hoverla.bibernate.connectionpool.pool;
 
+import lombok.extern.slf4j.Slf4j;
 import org.hoverla.bibernate.configuration.Configuration;
 import org.hoverla.bibernate.connectionpool.util.DriverDataSource;
+import org.hoverla.bibernate.exception.datasource.CannotGetPhysicalConnectionFromDatasourceException;
 
 import javax.sql.DataSource;
 import java.sql.Connection;
@@ -13,6 +15,7 @@ import java.util.concurrent.BlockingQueue;
  * This is the primary connection pool class that provides the basic
  * pooling behavior for Bibari Connection Pool.
  */
+@Slf4j
 public class BibariPool {
 
     private final Configuration config;
@@ -26,6 +29,7 @@ public class BibariPool {
      * @param config a Configuration instance
      */
     public BibariPool(Configuration config) {
+        log.info("Creating Bibary Connection Pool..");
         this.config = config;
         this.connectionPoolSize = config.getPoolSize();
         this.connectionPool = new ArrayBlockingQueue<>(connectionPoolSize);
@@ -50,6 +54,7 @@ public class BibariPool {
      * Create/initialize the underlying DataSource.
      */
     private void initializeDataSource() {
+        log.debug("Initializing underlying driver datasource");
         final var jdbcUrl = config.getUrl();
         final var username = config.getUsername();
         final var password = config.getPassword();
@@ -63,6 +68,7 @@ public class BibariPool {
      * Initialized connection pool by connection wrapper class - WrapperConnection.
      */
     private void initializePool() {
+        log.debug("Initializing pool by getting physical connection from non-pooled datasource");
         for (int i = 0; i < connectionPoolSize; i++) {
             connectionPool.add(new WrapperConnection(retrieveConnectionFromDataSource(), connectionPool));
         }
@@ -75,7 +81,7 @@ public class BibariPool {
         try {
             return ds.getConnection();
         } catch (SQLException e) {
-            throw new RuntimeException(e);
+            throw new CannotGetPhysicalConnectionFromDatasourceException("Could not retrieve physical connection from underlying driver data source", e);
         }
     }
 }
