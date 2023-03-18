@@ -3,7 +3,9 @@ package org.hoverla.bibernate.connectionpool.pool;
 import lombok.extern.slf4j.Slf4j;
 import org.hoverla.bibernate.configuration.Configuration;
 import org.hoverla.bibernate.connectionpool.util.DriverDataSource;
+import org.hoverla.bibernate.exception.ExceptionMessages;
 import org.hoverla.bibernate.exception.datasource.CannotGetPhysicalConnectionFromDatasourceException;
+import org.hoverla.bibernate.exception.pool.CannotTakePoolConnectionException;
 
 import javax.sql.DataSource;
 import java.sql.Connection;
@@ -46,7 +48,7 @@ public class BibariPool {
         try {
             return connectionPool.take();
         } catch (InterruptedException e) {
-            throw new RuntimeException(e);
+            throw new CannotTakePoolConnectionException(ExceptionMessages.CANNOT_TAKE_CONNECTION_FROM_POOL, e);
         }
     }
 
@@ -81,7 +83,7 @@ public class BibariPool {
         try {
             return ds.getConnection();
         } catch (SQLException e) {
-            throw new CannotGetPhysicalConnectionFromDatasourceException("Could not retrieve physical connection from underlying driver data source", e);
+            throw new CannotGetPhysicalConnectionFromDatasourceException(ExceptionMessages.CANNOT_GET_PHYSICAL_CONNECTION, e);
         }
     }
 }

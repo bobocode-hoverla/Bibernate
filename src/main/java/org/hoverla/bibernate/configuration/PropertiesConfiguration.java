@@ -24,7 +24,7 @@ public class PropertiesConfiguration implements Configuration {
     }
 
     private void configure(String propertiesFileName) {
-        Properties properties = PropertiesUtil.getPropertiesFor(propertiesFileName);
+        Properties properties = PropertiesUtil.getPropertiesFrom(propertiesFileName);
         configure(properties);
     }
 

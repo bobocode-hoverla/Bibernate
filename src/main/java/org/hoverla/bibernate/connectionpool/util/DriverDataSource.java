@@ -1,6 +1,8 @@
 package org.hoverla.bibernate.connectionpool.util;
 
 import lombok.extern.slf4j.Slf4j;
+import org.hoverla.bibernate.exception.datasource.DriverCannotGetJdbcUrlException;
+import org.hoverla.bibernate.exception.datasource.UnableGetDriverInstanceException;
 
 import javax.sql.DataSource;
 import java.io.PrintWriter;
@@ -99,10 +101,10 @@ public class DriverDataSource implements DataSource {
                 driver = DriverManager.getDriver(jdbcUrl);
                 log.debug("Loaded driver with class name {} for jdbcUrl={}", driver.getClass().getName(), sanitizedUrl);
             } else if (!driver.acceptsURL(jdbcUrl)) {
-                throw new RuntimeException("Driver " + driverClassName + " claims to not accept jdbcUrl, " + sanitizedUrl);
+                throw new DriverCannotGetJdbcUrlException("Driver " + driverClassName + " claims to not accept jdbcUrl, " + sanitizedUrl);
             }
         } catch (SQLException e) {
-            throw new RuntimeException("Failed to get driver instance for jdbcUrl=" + sanitizedUrl, e);
+            throw new UnableGetDriverInstanceException("Failed to get driver instance for jdbcUrl=" + sanitizedUrl, e);
         }
     }
 
