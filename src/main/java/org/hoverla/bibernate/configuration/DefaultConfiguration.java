@@ -2,19 +2,20 @@ package org.hoverla.bibernate.configuration;
 
 import lombok.Builder;
 import lombok.Data;
-import lombok.ToString;
+import lombok.extern.slf4j.Slf4j;
 import org.hoverla.bibernate.persistence.factory.DefaultSessionFactoryBuilder;
 import org.hoverla.bibernate.persistence.factory.SessionFactory;
 
 @Builder
-@ToString
 @Data
+@Slf4j
 public class DefaultConfiguration implements Configuration {
 
     private String url;
     private String username;
     private String password;
     private String driver;
+    private String entityPackageToScan;
 
     @Builder.Default
     private Integer poolSize = 10;
@@ -23,7 +24,7 @@ public class DefaultConfiguration implements Configuration {
 
     @Override
     public SessionFactory buildSessionFactory() {
-        // TODO: Let user configure session factory builder (expand configuration) ??
+        log.info("Building session factory with provided configuration={}", this);
         return new DefaultSessionFactoryBuilder().build(this);
     }
 }

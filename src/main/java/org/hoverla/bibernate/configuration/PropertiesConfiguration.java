@@ -11,12 +11,6 @@ public class PropertiesConfiguration implements Configuration {
     private static final String DEFAULT_CONFIG_PROPERTIES_FILE_NAME = "application.properties";
     private Properties properties;
 
-    @Override
-    public SessionFactory buildSessionFactory() {
-        // TODO: Let user configure session factory builder (expand configuration)
-        return new DefaultSessionFactoryBuilder().build(this);
-    }
-
     public PropertiesConfiguration() {
         this(DEFAULT_CONFIG_PROPERTIES_FILE_NAME);
     }
@@ -66,6 +60,11 @@ public class PropertiesConfiguration implements Configuration {
     @Override
     public ConnPoolProviderType getPoolProvider() {
         return ConnPoolProviderType.fromValue(properties.getProperty(DbSettings.CP_PROVIDER));
+    }
+
+    @Override
+    public SessionFactory buildSessionFactory() {
+        return new DefaultSessionFactoryBuilder().build(this);
     }
 
     private interface DbSettings {
