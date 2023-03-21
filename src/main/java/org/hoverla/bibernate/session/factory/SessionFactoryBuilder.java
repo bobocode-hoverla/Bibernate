@@ -1,9 +1,10 @@
-package org.hoverla.bibernate.persistence.factory;
+package org.hoverla.bibernate.session.factory;
 
 import org.hoverla.bibernate.configuration.Configuration;
+import org.hoverla.bibernate.session.Session;
 
 /**
- * The contract for building a {@link org.hoverla.bibernate.persistence.session.Session} given a configuration.
+ * The contract for building a {@link Session} given a configuration.
  */
 public interface SessionFactoryBuilder {
     /**

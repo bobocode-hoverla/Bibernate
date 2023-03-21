@@ -3,8 +3,8 @@ package org.hoverla.bibernate.configuration;
 import lombok.Builder;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
-import org.hoverla.bibernate.persistence.factory.DefaultSessionFactoryBuilder;
-import org.hoverla.bibernate.persistence.factory.SessionFactory;
+import org.hoverla.bibernate.session.factory.DefaultSessionFactoryBuilder;
+import org.hoverla.bibernate.session.factory.SessionFactory;
 
 @Builder
 @Data

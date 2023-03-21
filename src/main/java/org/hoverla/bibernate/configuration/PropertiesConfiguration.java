@@ -1,7 +1,7 @@
 package org.hoverla.bibernate.configuration;
 
-import org.hoverla.bibernate.persistence.factory.DefaultSessionFactoryBuilder;
-import org.hoverla.bibernate.persistence.factory.SessionFactory;
+import org.hoverla.bibernate.session.factory.DefaultSessionFactoryBuilder;
+import org.hoverla.bibernate.session.factory.SessionFactory;
 import org.hoverla.bibernate.util.PropertiesUtil;
 
 import java.util.Properties;

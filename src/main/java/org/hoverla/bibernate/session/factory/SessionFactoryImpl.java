@@ -1,7 +1,7 @@
-package org.hoverla.bibernate.persistence.factory;
+package org.hoverla.bibernate.session.factory;
 
-import org.hoverla.bibernate.persistence.session.Session;
-import org.hoverla.bibernate.persistence.session.SessionImpl;
+import org.hoverla.bibernate.session.DefaultSession;
+import org.hoverla.bibernate.session.Session;
 
 import javax.sql.DataSource;
 
@@ -15,11 +15,10 @@ public class SessionFactoryImpl implements SessionFactory {
 
     @Override
     public Session openSession() {
-        return new SessionImpl(dataSource);
+        return new DefaultSession(dataSource);
     }
 
     @Override
-    public void close() throws Exception {
-
+    public void close() {
     }
 }
