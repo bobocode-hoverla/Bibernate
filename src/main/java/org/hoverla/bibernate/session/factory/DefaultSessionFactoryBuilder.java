@@ -1,4 +1,4 @@
-package org.hoverla.bibernate.persistence.factory;
+package org.hoverla.bibernate.session.factory;
 
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
