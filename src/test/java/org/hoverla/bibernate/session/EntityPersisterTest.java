@@ -1,5 +1,6 @@
 package org.hoverla.bibernate.session;
 
+import org.hoverla.bibernate.exception.datasource.JDBCConnectionException;
 import org.hoverla.bibernate.fixtures.Person;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -12,6 +13,7 @@ import java.sql.SQLException;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.*;
 
 class EntityPersisterTest {
@@ -39,6 +41,13 @@ class EntityPersisterTest {
     }
 
     @Test
+    void testInsertThrowsException() throws SQLException {
+        var entity = new Person(1, "John", 30);
+        when(dataSource.getConnection()).thenThrow(new SQLException("test"));
+        assertThrows(JDBCConnectionException.class, () -> entityPersister.insert(entity));
+    }
+
+    @Test
     void testUpdate() throws SQLException {
         var entity = new Person(1, "John", 30);
         var connection = mockConnection();
@@ -49,6 +58,13 @@ class EntityPersisterTest {
     }
 
     @Test
+    void testUpdateThrowsException() throws SQLException {
+        var entity = new Person(1, "John", 30);
+        when(dataSource.getConnection()).thenThrow(new SQLException("test"));
+        assertThrows(JDBCConnectionException.class, () -> entityPersister.update(entity));
+    }
+
+    @Test
     void testDelete() throws SQLException {
         var entity = new Person(1, "John", 30);
         var connection = mockConnection();
@@ -56,6 +72,13 @@ class EntityPersisterTest {
         entityPersister.delete(entity);
         verify(connection).prepareStatement(anyString());
         verify(connection).close();
+    }
+
+    @Test
+    void testDeleteThrowsException() throws SQLException {
+        var entity = new Person(1, "John", 30);
+        when(dataSource.getConnection()).thenThrow(new SQLException("test"));
+        assertThrows(JDBCConnectionException.class, () -> entityPersister.delete(entity));
     }
 
     @Test

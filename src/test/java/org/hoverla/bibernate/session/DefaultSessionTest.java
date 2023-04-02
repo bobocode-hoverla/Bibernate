@@ -170,6 +170,7 @@ class DefaultSessionTest {
         PreparedStatement ps = mock(PreparedStatement.class);
         when(connection.prepareStatement("INSERT INTO person(name, age) VALUES(?,?);")).thenReturn(ps);
         defaultSession.persist(person);
+        defaultSession.flush();
         Assertions.assertEquals(person, defaultSession.find(Person.class, id));
     }
 
@@ -178,7 +179,6 @@ class DefaultSessionTest {
         defaultSession.close();
         Assertions.assertTrue(defaultSession.isClosed());
     }
-
     private <T> ResultSet mockResultSet(T entity) throws SQLException {
         var resultSet = mock(ResultSet.class);
         when(resultSet.next()).thenReturn(true, false);
