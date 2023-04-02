@@ -82,7 +82,9 @@ public class WrapperConnection implements Connection {
      */
     @Override
     public void close() {
-        connectionPool.add(this);
+        if (!connectionPool.contains(this)) {
+            connectionPool.add(this);
+        }
     }
 
     @Override

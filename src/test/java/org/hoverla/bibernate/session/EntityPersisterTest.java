@@ -16,13 +16,12 @@ import static org.mockito.Mockito.*;
 
 class EntityPersisterTest {
     private DataSource dataSource;
-    private PersistenceContext persistenceContext;
     private EntityPersister entityPersister;
 
     @BeforeEach
     public void setUp() throws NoSuchFieldException {
         dataSource = mock(DataSource.class);
-        persistenceContext = new PersistenceContext();
+        PersistenceContext persistenceContext = new PersistenceContext();
         entityPersister = new EntityPersister(dataSource, persistenceContext);
         Person.class.getDeclaredField("name").setAccessible(true);
         Person.class.getDeclaredField("age").setAccessible(true);
@@ -35,6 +34,26 @@ class EntityPersisterTest {
         when(dataSource.getConnection()).thenReturn(connection);
         var result = entityPersister.insert(entity);
         assertEquals(entity, result);
+        verify(connection).prepareStatement(anyString());
+        verify(connection).close();
+    }
+
+    @Test
+    void testUpdate() throws SQLException {
+        var entity = new Person(1, "John", 30);
+        var connection = mockConnection();
+        when(dataSource.getConnection()).thenReturn(connection);
+        entityPersister.update(entity);
+        verify(connection).prepareStatement(anyString());
+        verify(connection).close();
+    }
+
+    @Test
+    void testDelete() throws SQLException {
+        var entity = new Person(1, "John", 30);
+        var connection = mockConnection();
+        when(dataSource.getConnection()).thenReturn(connection);
+        entityPersister.delete(entity);
         verify(connection).prepareStatement(anyString());
         verify(connection).close();
     }
