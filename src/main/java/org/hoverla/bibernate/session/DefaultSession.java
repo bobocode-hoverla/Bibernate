@@ -1,6 +1,7 @@
 package org.hoverla.bibernate.session;
 
 import lombok.RequiredArgsConstructor;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.hoverla.bibernate.action.EntityAction;
 import org.hoverla.bibernate.action.EntityDeleteAction;
@@ -29,6 +30,8 @@ public class DefaultSession implements Session {
     private final PersistenceContext persistenceContext;
     private final Queue<EntityAction> actionQueue;
     private boolean closed;
+    @Setter
+    private boolean readonly;
     private TransactionManager transactionManager;
 
     public DefaultSession(DataSource dataSource) {
@@ -120,13 +123,17 @@ public class DefaultSession implements Session {
 
     @Override
     public void flush() {
-        log.trace("Flushing session");
-        throwIfClosed();
-        List<Object> dirtyEntities = persistenceContext.getDirtyEntities();
-        dirtyEntities.forEach(dirtyEntity -> actionQueue.add(new EntityUpdateAction(dirtyEntity, persister)));
-        while (!actionQueue.isEmpty()) {
-            var entityAction = actionQueue.poll();
-            entityAction.execute();
+        if (readonly) {
+            log.warn("Readonly mode is ON. Dirty checking is not working");
+        } else {
+            log.trace("Flushing session");
+            throwIfClosed();
+            List<Object> dirtyEntities = persistenceContext.getDirtyEntities();
+            dirtyEntities.forEach(dirtyEntity -> actionQueue.add(new EntityUpdateAction(dirtyEntity, persister)));
+            while (!actionQueue.isEmpty()) {
+                var entityAction = actionQueue.poll();
+                entityAction.execute();
+            }
         }
         persister.setDataSource(transactionManager.getRawDataSource());
     }
@@ -151,12 +158,6 @@ public class DefaultSession implements Session {
     public boolean isClosed() {
         return closed;
     }
-
-    @Override
-    public void setReadonly(boolean readonly) {
-        persistenceContext.setReadonly(readonly);
-    }
-
     @Override
     public TransactionManager getTransactionManager() {
         persister.setDataSource(new DelegatingDataSource(transactionManager.getRawDataSource(), transactionManager));

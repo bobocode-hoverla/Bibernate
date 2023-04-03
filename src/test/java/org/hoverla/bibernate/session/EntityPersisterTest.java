@@ -1,6 +1,7 @@
 package org.hoverla.bibernate.session;
 
 import org.hoverla.bibernate.exception.datasource.JDBCConnectionException;
+import org.hoverla.bibernate.exception.session.jdbc.PrepareStatementFailureException;
 import org.hoverla.bibernate.fixtures.Person;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -48,6 +49,15 @@ class EntityPersisterTest {
     }
 
     @Test
+    void testInsertThrowsPrepareStatementFailureException() throws SQLException {
+        var entity = new Person(1, "John", 30);
+        var connection = mockConnection();
+        when(dataSource.getConnection()).thenReturn(connection);
+        when(connection.prepareStatement(anyString())).thenThrow(new SQLException("test"));
+        assertThrows(PrepareStatementFailureException.class, () -> entityPersister.insert(entity));
+    }
+
+    @Test
     void testUpdate() throws SQLException {
         var entity = new Person(1, "John", 30);
         var connection = mockConnection();
@@ -62,6 +72,15 @@ class EntityPersisterTest {
         var entity = new Person(1, "John", 30);
         when(dataSource.getConnection()).thenThrow(new SQLException("test"));
         assertThrows(JDBCConnectionException.class, () -> entityPersister.update(entity));
+    }
+
+    @Test
+    void testUpdateThrowsPrepareStatementFailureException() throws SQLException {
+        var entity = new Person(1, "John", 30);
+        var connection = mockConnection();
+        when(dataSource.getConnection()).thenReturn(connection);
+        when(connection.prepareStatement(anyString())).thenThrow(new SQLException("test"));
+        assertThrows(PrepareStatementFailureException.class, () -> entityPersister.update(entity));
     }
 
     @Test

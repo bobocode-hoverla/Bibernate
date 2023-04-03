@@ -31,7 +31,6 @@ public class Hello {
         log.info("Customers found: {}",  customers);
 
         doInTx(session -> {
-            session.setReadonly(true);
             Customer customer = session.find(Customer.class, 45L);
 
             Customer newCustomer = new Customer();
