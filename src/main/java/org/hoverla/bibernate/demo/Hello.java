@@ -15,7 +15,7 @@ public class Hello {
     public static void main(String[] args) {
         Configuration configuration = new PropertiesConfiguration();
         DataSource bibariDataSource = new BibariDataSource(configuration);
-        var sessionFactory = new SessionFactoryImpl(bibariDataSource);
+        var sessionFactory = new SessionFactoryImpl(bibariDataSource, configuration);
         var session = sessionFactory.openSession();
         var transaction = session.getTransaction();
 

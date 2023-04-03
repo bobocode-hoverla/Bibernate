@@ -15,7 +15,8 @@ public class DefaultConfiguration implements Configuration {
     private String username;
     private String password;
     private String driver;
-    private String entityPackageToScan;
+    private String entitiesPackage;
+    private boolean autoDdlCreation;
 
     @Builder.Default
     private Integer poolSize = 10;

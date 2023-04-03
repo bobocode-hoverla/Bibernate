@@ -22,8 +22,10 @@ public interface Configuration {
     Integer getPoolSize();
 
     ConnPoolProviderType getPoolProvider();
+    String getEntitiesPackage();
 
     SessionFactory buildSessionFactory();
+    boolean isAutoDdlCreation();
 
     /**
      * Validates the correctness of configuration object.

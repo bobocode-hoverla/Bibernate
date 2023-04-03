@@ -6,6 +6,10 @@ import org.hoverla.bibernate.util.PropertiesUtil;
 
 import java.util.Properties;
 
+import static java.lang.Boolean.parseBoolean;
+import static java.lang.Integer.parseInt;
+import static org.hoverla.bibernate.configuration.Configuration.ConnPoolProviderType.fromValue;
+
 public class PropertiesConfiguration implements Configuration {
 
     private static final String DEFAULT_CONFIG_PROPERTIES_FILE_NAME = "application.properties";
@@ -15,16 +19,16 @@ public class PropertiesConfiguration implements Configuration {
         this(DEFAULT_CONFIG_PROPERTIES_FILE_NAME);
     }
 
-    public PropertiesConfiguration(Properties properties) {
-        configure(properties);
-    }
-
     public PropertiesConfiguration(String propertiesFileName) {
         configure(propertiesFileName);
     }
 
     private void configure(String propertiesFileName) {
         Properties properties = PropertiesUtil.getPropertiesFrom(propertiesFileName);
+        configure(properties);
+    }
+
+    public PropertiesConfiguration(Properties properties) {
         configure(properties);
     }
 
@@ -54,12 +58,17 @@ public class PropertiesConfiguration implements Configuration {
 
     @Override
     public Integer getPoolSize() {
-        return Integer.parseInt(properties.getProperty(DbSettings.POOL_SIZE));
+        return parseInt(properties.getProperty(DbSettings.POOL_SIZE));
     }
 
     @Override
     public ConnPoolProviderType getPoolProvider() {
-        return ConnPoolProviderType.fromValue(properties.getProperty(DbSettings.CP_PROVIDER));
+        return fromValue(properties.getProperty(DbSettings.CP_PROVIDER));
+    }
+
+    @Override
+    public boolean isAutoDdlCreation() {
+        return parseBoolean(properties.getProperty(DbSettings.AUTO_DLL));
     }
 
     @Override
@@ -74,5 +83,6 @@ public class PropertiesConfiguration implements Configuration {
         String DRIVER = "db.driver";
         String POOL_SIZE = "db.pool.size";
         String CP_PROVIDER = "db.pool.provider";
+        String AUTO_DLL = "db.auto.dll.creation";
     }
 }
