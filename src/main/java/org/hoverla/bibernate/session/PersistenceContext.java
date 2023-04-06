@@ -1,11 +1,14 @@
 package org.hoverla.bibernate.session;
 
-import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.hoverla.bibernate.util.EntityKey;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import static org.hoverla.bibernate.util.EntityUtils.mapToSnapshot;
 
@@ -18,8 +21,6 @@ import static org.hoverla.bibernate.util.EntityUtils.mapToSnapshot;
 public class PersistenceContext {
     private final Map<EntityKey<?>, Object> entitiesMap = new HashMap<>();
     private final Map<EntityKey<?>, Object[]> snapshotCopiesMap = new HashMap<>();
-    @Setter
-    private boolean readonly;
 
     @SuppressWarnings("unchecked")
     public <T> T manageEntity(T entity) {
@@ -53,6 +54,22 @@ public class PersistenceContext {
         log.trace("Checking if entity {} is present in persistence context", entity);
         var key = EntityKey.valueOf(entity);
         return entitiesMap.containsKey(key);
+    }
+
+    public List<Object> getDirtyEntities() {
+        log.trace("Getting dirty entities");
+        var dirtyEntities = new ArrayList<>();
+        for (Entry<EntityKey<?>, Object> entry: entitiesMap.entrySet()) {
+            Object currentEntity = entry.getValue();
+            Object[] currentSnapshot = mapToSnapshot(currentEntity);
+            Object[] initialSnapshot = snapshotCopiesMap.get(entry.getKey());
+            if (!Arrays.equals(initialSnapshot, currentSnapshot)) {
+                log.trace("Found dirty entity: {}", currentEntity);
+                log.trace("Initial snapshot: {}", initialSnapshot);
+                dirtyEntities.add(currentEntity);
+            }
+        }
+        return dirtyEntities;
     }
 
 

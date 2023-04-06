@@ -1,5 +1,6 @@
 package org.hoverla.bibernate.util;
 
+import org.hoverla.bibernate.exception.session.FieldNotFoundException;
 import org.hoverla.bibernate.fixtures.Person;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -73,6 +74,14 @@ class EntityUtilsTest {
     }
 
     @Test
+    void testGetFieldsForUpdate() {
+        Field[] fields = EntityUtils.getFieldsForUpdate(Person.class);
+        Assertions.assertEquals(2, fields.length);
+        Assertions.assertEquals("name", fields[0].getName());
+        Assertions.assertEquals("age", fields[1].getName());
+    }
+
+    @Test
     void testResolveTableName() {
         String tableName = EntityUtils.resolveTableName(Person.class);
         Assertions.assertEquals("person", tableName);
@@ -99,5 +108,17 @@ class EntityUtilsTest {
         Assertions.assertEquals(LocalDateTime.of(2022, 1, 1, 0, 0), timestampValue);
         Assertions.assertEquals(LocalDate.of(2022, 1, 1), dateValue);
         Assertions.assertEquals("test", otherValue);
+    }
+
+    @Test
+    void testResolveFieldByName() {
+        Field field = EntityUtils.resolveFieldByName(Person.class, "name");
+        Assertions.assertEquals("name", field.getName());
+    }
+
+    @Test
+    void testResolveFieldByNameFieldNotFound() {
+        Assertions.assertThrows(FieldNotFoundException.class,
+            () -> EntityUtils.resolveFieldByName(Person.class, "trash"));
     }
 }

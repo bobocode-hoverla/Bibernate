@@ -70,6 +70,22 @@ class PersistenceContextTest {
     }
 
     @Test
+    void testGetDirtyEntities() {
+        // Add entities to the context
+        var person = new Person(1, "John Doe", 30);
+        var book = new Book(1, "The Catcher in the Rye");
+        persistenceContext.addEntity(person);
+        persistenceContext.addEntity(book);
+
+        // dirty write
+        person.setName("NEW_NAME");
+
+        // check if context contains dirty entities
+        var dirtyEntities = persistenceContext.getDirtyEntities();
+        assertFalse(dirtyEntities.isEmpty());
+    }
+
+    @Test
     void testClear() {
         // Add entities to the context
         var person = new Person(1, "John Doe", 30);

@@ -1,5 +1,7 @@
 package org.hoverla.bibernate.session;
 
+import org.hoverla.bibernate.exception.datasource.JDBCConnectionException;
+import org.hoverla.bibernate.exception.session.jdbc.PrepareStatementFailureException;
 import org.hoverla.bibernate.fixtures.Person;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -12,17 +14,17 @@ import java.sql.SQLException;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.*;
 
 class EntityPersisterTest {
     private DataSource dataSource;
-    private PersistenceContext persistenceContext;
     private EntityPersister entityPersister;
 
     @BeforeEach
     public void setUp() throws NoSuchFieldException {
         dataSource = mock(DataSource.class);
-        persistenceContext = new PersistenceContext();
+        PersistenceContext persistenceContext = new PersistenceContext();
         entityPersister = new EntityPersister(dataSource, persistenceContext);
         Person.class.getDeclaredField("name").setAccessible(true);
         Person.class.getDeclaredField("age").setAccessible(true);
@@ -37,6 +39,65 @@ class EntityPersisterTest {
         assertEquals(entity, result);
         verify(connection).prepareStatement(anyString());
         verify(connection).close();
+    }
+
+    @Test
+    void testInsertThrowsException() throws SQLException {
+        var entity = new Person(1, "John", 30);
+        when(dataSource.getConnection()).thenThrow(new SQLException("test"));
+        assertThrows(JDBCConnectionException.class, () -> entityPersister.insert(entity));
+    }
+
+    @Test
+    void testInsertThrowsPrepareStatementFailureException() throws SQLException {
+        var entity = new Person(1, "John", 30);
+        var connection = mockConnection();
+        when(dataSource.getConnection()).thenReturn(connection);
+        when(connection.prepareStatement(anyString())).thenThrow(new SQLException("test"));
+        assertThrows(PrepareStatementFailureException.class, () -> entityPersister.insert(entity));
+    }
+
+    @Test
+    void testUpdate() throws SQLException {
+        var entity = new Person(1, "John", 30);
+        var connection = mockConnection();
+        when(dataSource.getConnection()).thenReturn(connection);
+        entityPersister.update(entity);
+        verify(connection).prepareStatement(anyString());
+        verify(connection).close();
+    }
+
+    @Test
+    void testUpdateThrowsException() throws SQLException {
+        var entity = new Person(1, "John", 30);
+        when(dataSource.getConnection()).thenThrow(new SQLException("test"));
+        assertThrows(JDBCConnectionException.class, () -> entityPersister.update(entity));
+    }
+
+    @Test
+    void testUpdateThrowsPrepareStatementFailureException() throws SQLException {
+        var entity = new Person(1, "John", 30);
+        var connection = mockConnection();
+        when(dataSource.getConnection()).thenReturn(connection);
+        when(connection.prepareStatement(anyString())).thenThrow(new SQLException("test"));
+        assertThrows(PrepareStatementFailureException.class, () -> entityPersister.update(entity));
+    }
+
+    @Test
+    void testDelete() throws SQLException {
+        var entity = new Person(1, "John", 30);
+        var connection = mockConnection();
+        when(dataSource.getConnection()).thenReturn(connection);
+        entityPersister.delete(entity);
+        verify(connection).prepareStatement(anyString());
+        verify(connection).close();
+    }
+
+    @Test
+    void testDeleteThrowsException() throws SQLException {
+        var entity = new Person(1, "John", 30);
+        when(dataSource.getConnection()).thenThrow(new SQLException("test"));
+        assertThrows(JDBCConnectionException.class, () -> entityPersister.delete(entity));
     }
 
     @Test

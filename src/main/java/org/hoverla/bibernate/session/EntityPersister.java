@@ -1,10 +1,12 @@
 package org.hoverla.bibernate.session;
 
-import lombok.RequiredArgsConstructor;
+import lombok.AllArgsConstructor;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.hoverla.bibernate.exception.datasource.JDBCConnectionException;
 import org.hoverla.bibernate.exception.session.jdbc.PrepareStatementFailureException;
 import org.hoverla.bibernate.util.EntityKey;
+import org.hoverla.bibernate.util.EntityUtils;
 
 import javax.sql.DataSource;
 import java.lang.reflect.Field;
@@ -17,16 +19,21 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static org.hoverla.bibernate.util.EntityUtils.getFieldsForInsert;
+import static org.hoverla.bibernate.util.EntityUtils.getFieldsForUpdate;
+import static org.hoverla.bibernate.util.EntityUtils.getId;
 import static org.hoverla.bibernate.util.EntityUtils.getIdField;
 import static org.hoverla.bibernate.util.EntityUtils.isColumnField;
 import static org.hoverla.bibernate.util.EntityUtils.isIdField;
 import static org.hoverla.bibernate.util.EntityUtils.resolveColumnName;
 import static org.hoverla.bibernate.util.EntityUtils.resolveColumnValue;
 import static org.hoverla.bibernate.util.EntityUtils.resolveTableName;
+import static org.hoverla.bibernate.util.SqlUtils.DELETE_BY_COLUMN_TEMPLATE;
 import static org.hoverla.bibernate.util.SqlUtils.INSERT_TEMPLATE;
 import static org.hoverla.bibernate.util.SqlUtils.SELECT_BY_COLUMN_TEMPLATE;
+import static org.hoverla.bibernate.util.SqlUtils.UPDATE_TEMPLATE;
 import static org.hoverla.bibernate.util.SqlUtils.getCommaSeparatedInsertableColumns;
 import static org.hoverla.bibernate.util.SqlUtils.getCommaSeparatedInsertableParams;
+import static org.hoverla.bibernate.util.SqlUtils.getCommaSeparatedUpdatableColumns;
 
 
 /**
@@ -34,26 +41,71 @@ import static org.hoverla.bibernate.util.SqlUtils.getCommaSeparatedInsertablePar
  * Typically invoked during the flush/commit/close operations
  */
 @Slf4j
-@RequiredArgsConstructor
+@AllArgsConstructor
 public class EntityPersister {
-    private final DataSource dataSource;
+    @Setter
+    private DataSource dataSource;
     private final PersistenceContext persistenceContext;
+
+    private static final String TABLE_LOG = "Resolved table name -> {}";
+    private static final String CONNECTION_ERROR = "Unable to acquire JDBC Connection";
 
     public <T> T insert(T entity) {
         log.trace("Inserting entity {}", entity);
         var type = entity.getClass();
         try (var conn = dataSource.getConnection()) {
             var table = resolveTableName(type);
+            log.trace(TABLE_LOG, table);
             var columns = getCommaSeparatedInsertableColumns(type);
             var params = getCommaSeparatedInsertableParams(type);
             var insertQuery = INSERT_TEMPLATE.formatted(table, columns, params);
             log.trace("Insert query: {}", insertQuery);
             executeInsert(entity, conn, insertQuery);
         } catch (SQLException e) {
-            log.error("Unable to acquire JDBC Connection", e);
+            log.error(CONNECTION_ERROR, e);
             throw new JDBCConnectionException(e);
         }
         return entity;
+    }
+
+    public <T> void update(T entity) {
+        log.trace("Updating entity {}", entity);
+        var type = entity.getClass();
+        try (var conn = dataSource.getConnection()) {
+            var table = resolveTableName(type);
+            log.trace(TABLE_LOG, table);
+            var columns = getCommaSeparatedUpdatableColumns(type);
+            var idField = getIdField(type);
+            var idColumnName = resolveColumnName(idField) + " = ? ";
+            log.trace("Resolved id column name -> {}", idColumnName);
+            String updateQuery = UPDATE_TEMPLATE.formatted(table, columns, idColumnName);
+            executeUpdate(entity, conn, updateQuery);
+        } catch (SQLException e) {
+            log.error(CONNECTION_ERROR, e);
+            throw new JDBCConnectionException(e);
+        }
+    }
+
+    public <T> void delete(T entity) {
+        log.trace("Removing entity {}", entity);
+        var type = entity.getClass();
+        try (var conn = dataSource.getConnection()) {
+            var table = resolveTableName(type);
+            log.trace(TABLE_LOG, table);
+            var idField = getIdField(type);
+            var idColumnName = resolveColumnName(idField);
+            log.trace("Resolved id column name -> {}", idColumnName);
+            var id = getId(entity);
+            String deleteQuery = DELETE_BY_COLUMN_TEMPLATE.formatted(table, idColumnName);
+            try (var deleteStatement = conn.prepareStatement(deleteQuery)) {
+                deleteStatement.setObject(1, id);
+                log.debug("SQL: {}", deleteStatement);
+                deleteStatement.executeUpdate();
+            }
+        } catch (SQLException e) {
+            log.error(CONNECTION_ERROR, e);
+            throw new JDBCConnectionException(e);
+        }
     }
 
     public <T> T findById(Class<T> entityType, Object id) throws SQLException,
@@ -76,7 +128,7 @@ public class EntityPersister {
         var list = new ArrayList<T>();
         try (var connection = dataSource.getConnection()) {
             var tableName = resolveTableName(entityType);
-            log.trace("Resolved table name -> {}", tableName);
+            log.trace(TABLE_LOG, tableName);
             var columnName = resolveColumnName(field);
             log.trace("Resolved column name -> {}", columnName);
             var selectSql = String.format(SELECT_BY_COLUMN_TEMPLATE, tableName, columnName);
@@ -126,6 +178,7 @@ public class EntityPersister {
 
     public <T> T findOneBy(Class<T> entityType, Field field, Object columnValue) throws SQLException,
         InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException {
+
         var result = findAllBy(entityType, field, columnValue);
         if (result.size() != 1) {
             throw new IllegalStateException("The result must contain exactly one row");
@@ -136,33 +189,46 @@ public class EntityPersister {
     private <T> void executeInsert(T entity, Connection conn, String insertQuery) {
         try (var insertStatement = conn.prepareStatement(insertQuery)) {
             fillInsertStatementParams(insertStatement, entity);
+            log.debug("SQL: " + insertQuery);
             insertStatement.executeUpdate();
         } catch (SQLException | IllegalAccessException e) {
             log.error("Could not prepare statement with SQL: {}", insertQuery, e);
             throw new PrepareStatementFailureException(insertQuery, e);
         }
     }
+    
+    private <T> void executeUpdate(T entity, Connection conn, String updateQuery) {
+        try (var updateStatement = conn.prepareStatement(updateQuery)) {
+            fillUpdateStatementParams(updateStatement, entity);
+            var idParamIndex = EntityUtils.getFieldsForUpdate(entity.getClass()).length + 1;
+            updateStatement.setObject(idParamIndex, getId(entity));
+            log.debug("SQL: " + updateStatement);
+            updateStatement.executeUpdate();
+        } catch (SQLException | IllegalAccessException e) {
+            log.error("Could not prepare statement with SQL: {}", updateQuery, e);
+            throw new PrepareStatementFailureException(updateQuery, e);
+        }
+    } 
 
-    @SuppressWarnings("java:S3011")
     private void fillInsertStatementParams(PreparedStatement insertStatement, Object entity)
         throws IllegalAccessException, SQLException {
         Field[] fieldsForInsert = getFieldsForInsert(entity.getClass());
+        prepareStatement(insertStatement, entity, fieldsForInsert);
+    }
+
+    private void fillUpdateStatementParams(PreparedStatement updateStatement, Object entity)
+        throws IllegalAccessException, SQLException {
+        Field[] fieldsForInsert = getFieldsForUpdate(entity.getClass());
+        prepareStatement(updateStatement, entity, fieldsForInsert);
+    }
+
+    @SuppressWarnings("java:S3011")
+    private static void prepareStatement(PreparedStatement statement, Object entity, Field[] fieldsForInsert) throws IllegalAccessException, SQLException {
         for (int i = 0; i < fieldsForInsert.length; i++) {
             var f = fieldsForInsert[i];
             f.setAccessible(true);
             Object columnValue = f.get(entity);
-            insertStatement.setObject(i + 1, columnValue);
+            statement.setObject(i + 1, columnValue);
         }
-
-    }
-
-    public void update(Object entity) {
-        //TODO
-        throw new UnsupportedOperationException();
-    }
-
-    public void delete(Object entity) {
-        //TODO
-        throw new UnsupportedOperationException();
     }
 }

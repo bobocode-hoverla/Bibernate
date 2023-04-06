@@ -6,6 +6,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.hoverla.bibernate.annotation.Column;
 import org.hoverla.bibernate.annotation.Id;
 import org.hoverla.bibernate.annotation.Table;
+import org.hoverla.bibernate.exception.session.FieldNotFoundException;
 import org.hoverla.bibernate.exception.session.IdNotFoundException;
 
 import java.lang.reflect.Field;
@@ -69,6 +70,18 @@ public class EntityUtils {
         return Arrays.stream(entityType.getDeclaredFields())
             .filter(fieldPredicate)
             .toArray(Field[]::new);
+    }
+
+    public static Field[] getFieldsForUpdate(Class<?> entityType) {
+        Predicate<Field> updatableFieldPredicate = f -> isColumnField(f) && !isIdField(f);
+        return getFields(entityType, updatableFieldPredicate);
+    }
+
+    public static Field resolveFieldByName(Class<?> entityType, String fieldName) {
+        return Arrays.stream(entityType.getDeclaredFields())
+            .filter(field -> field.getName().equalsIgnoreCase(fieldName))
+            .findFirst()
+            .orElseThrow(() -> new FieldNotFoundException(fieldName, entityType.getSimpleName()));
     }
 
     public static Field[] getFieldsForInsert(Class<?> entityType) {
