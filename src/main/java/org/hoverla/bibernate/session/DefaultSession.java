@@ -35,12 +35,11 @@ public class DefaultSession implements Session {
     private TransactionManager transactionManager;
 
     public DefaultSession(DataSource dataSource) {
-        actionQueue = new PriorityQueue<>(comparing(EntityAction::priority));
-        persistenceContext = new PersistenceContext();
+        this.actionQueue = new PriorityQueue<>(comparing(EntityAction::priority));
+        this.persistenceContext = new PersistenceContext();
 
         this.transactionManager = new TransactionManagerImpl(dataSource, this);
-        this.persister =
-            new EntityPersister(dataSource, persistenceContext);
+        this.persister = new EntityPersister(dataSource, persistenceContext);
     }
 
     @Override

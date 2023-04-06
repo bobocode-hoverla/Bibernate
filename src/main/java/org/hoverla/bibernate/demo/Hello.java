@@ -31,7 +31,10 @@ public class Hello {
         log.info("Customers found: {}",  customers);
 
         doInTx(session -> {
-            Customer customer = session.find(Customer.class, 45L);
+            Customer customer = session.find(Customer.class, 1L);
+
+            var project = session.find(Project.class, 1L);
+            System.out.println(project);
 
             Customer newCustomer = new Customer();
             newCustomer.setFirstName("Anton");

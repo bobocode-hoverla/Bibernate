@@ -18,22 +18,8 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.hoverla.bibernate.util.EntityUtils.getFieldsForInsert;
-import static org.hoverla.bibernate.util.EntityUtils.getFieldsForUpdate;
-import static org.hoverla.bibernate.util.EntityUtils.getId;
-import static org.hoverla.bibernate.util.EntityUtils.getIdField;
-import static org.hoverla.bibernate.util.EntityUtils.isColumnField;
-import static org.hoverla.bibernate.util.EntityUtils.isIdField;
-import static org.hoverla.bibernate.util.EntityUtils.resolveColumnName;
-import static org.hoverla.bibernate.util.EntityUtils.resolveColumnValue;
-import static org.hoverla.bibernate.util.EntityUtils.resolveTableName;
-import static org.hoverla.bibernate.util.SqlUtils.DELETE_BY_COLUMN_TEMPLATE;
-import static org.hoverla.bibernate.util.SqlUtils.INSERT_TEMPLATE;
-import static org.hoverla.bibernate.util.SqlUtils.SELECT_BY_COLUMN_TEMPLATE;
-import static org.hoverla.bibernate.util.SqlUtils.UPDATE_TEMPLATE;
-import static org.hoverla.bibernate.util.SqlUtils.getCommaSeparatedInsertableColumns;
-import static org.hoverla.bibernate.util.SqlUtils.getCommaSeparatedInsertableParams;
-import static org.hoverla.bibernate.util.SqlUtils.getCommaSeparatedUpdatableColumns;
+import static org.hoverla.bibernate.util.EntityUtils.*;
+import static org.hoverla.bibernate.util.SqlUtils.*;
 
 
 /**
@@ -109,7 +95,7 @@ public class EntityPersister {
     }
 
     public <T> T findById(Class<T> entityType, Object id) throws SQLException,
-        InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException {
+            InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException {
         log.trace("Selecting entity {} by id = {}", entityType.getSimpleName(), id);
         var key = new EntityKey<>(id, entityType);
         var cachedEntity = persistenceContext.getEntity(key);
@@ -123,7 +109,7 @@ public class EntityPersister {
     }
 
     public <T> List<T> findAllBy(Class<T> entityType, Field field, Object columnValue) throws SQLException,
-        InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException {
+            InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException {
         log.trace("Selecting from table by column value");
         var list = new ArrayList<T>();
         try (var connection = dataSource.getConnection()) {
@@ -148,7 +134,7 @@ public class EntityPersister {
 
     @SuppressWarnings("java:S3011")
     private <T> T createEntityFrom(Class<T> entityType, ResultSet resultSet) throws NoSuchMethodException,
-        InvocationTargetException, InstantiationException, IllegalAccessException, SQLException {
+            InvocationTargetException, InstantiationException, IllegalAccessException, SQLException {
         log.trace("Creating entity {} from the result set", entityType.getSimpleName());
         var constructor = entityType.getConstructor();
         var entity = constructor.newInstance();
@@ -163,7 +149,19 @@ public class EntityPersister {
                 var id = resultSet.getObject(columnName);
                 log.trace("Setting value '{}' to the entity id", id);
                 field.set(entity, id);
-            } else if (isColumnField(field)) {
+            } else if (isSingleObjectField(field)) {
+                log.trace("Processing single object id");
+                var relatedEntityType = field.getType();
+                var fieldName = resolveColumnName(field);
+                var relatedFieldValue = resultSet.getObject(fieldName);
+                var relatedIdField = getIdField(relatedEntityType);
+
+                var relatedEntity = findOneBy(relatedEntityType, relatedIdField, relatedFieldValue);
+                field.setAccessible(true);
+                field.set(entity, relatedEntity);
+            } else if (isMultipleObjectField(field)) {
+
+            } else if (isRegularField(field)) {
                 log.trace("Processing simple field {}", field.getName());
                 var columnName = resolveColumnName(field);
                 log.trace("Resolved column name '{}'", columnName);
@@ -177,7 +175,7 @@ public class EntityPersister {
     }
 
     public <T> T findOneBy(Class<T> entityType, Field field, Object columnValue) throws SQLException,
-        InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException {
+            InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException {
 
         var result = findAllBy(entityType, field, columnValue);
         if (result.size() != 1) {
@@ -196,7 +194,7 @@ public class EntityPersister {
             throw new PrepareStatementFailureException(insertQuery, e);
         }
     }
-    
+
     private <T> void executeUpdate(T entity, Connection conn, String updateQuery) {
         try (var updateStatement = conn.prepareStatement(updateQuery)) {
             fillUpdateStatementParams(updateStatement, entity);
@@ -208,16 +206,16 @@ public class EntityPersister {
             log.error("Could not prepare statement with SQL: {}", updateQuery, e);
             throw new PrepareStatementFailureException(updateQuery, e);
         }
-    } 
+    }
 
     private void fillInsertStatementParams(PreparedStatement insertStatement, Object entity)
-        throws IllegalAccessException, SQLException {
+            throws IllegalAccessException, SQLException {
         Field[] fieldsForInsert = getFieldsForInsert(entity.getClass());
         prepareStatement(insertStatement, entity, fieldsForInsert);
     }
 
     private void fillUpdateStatementParams(PreparedStatement updateStatement, Object entity)
-        throws IllegalAccessException, SQLException {
+            throws IllegalAccessException, SQLException {
         Field[] fieldsForInsert = getFieldsForUpdate(entity.getClass());
         prepareStatement(updateStatement, entity, fieldsForInsert);
     }

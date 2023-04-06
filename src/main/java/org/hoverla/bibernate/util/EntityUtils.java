@@ -3,9 +3,7 @@ package org.hoverla.bibernate.util;
 import lombok.SneakyThrows;
 import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
-import org.hoverla.bibernate.annotation.Column;
-import org.hoverla.bibernate.annotation.Id;
-import org.hoverla.bibernate.annotation.Table;
+import org.hoverla.bibernate.annotation.*;
 import org.hoverla.bibernate.exception.session.FieldNotFoundException;
 import org.hoverla.bibernate.exception.session.IdNotFoundException;
 
@@ -15,6 +13,7 @@ import java.sql.Timestamp;
 import java.util.Arrays;
 import java.util.Optional;
 import java.util.function.Predicate;
+import java.util.stream.Stream;
 
 /**
  * This class contains lots of helper methods to fetch the
@@ -108,5 +107,20 @@ public class EntityUtils {
         } else {
             return resultSetValue;
         }
+    }
+
+    public static boolean isRegularField(Field field) {
+        return isColumnField(field)
+                &&!isSingleObjectField(field)
+                && !isMultipleObjectField(field);
+    }
+
+    public static boolean isSingleObjectField(Field field) {
+        return Stream.of(ManyToOne.class, OneToOne.class)
+                .anyMatch(field::isAnnotationPresent);
+    }
+
+    public static boolean isMultipleObjectField(Field field) {
+        return field.isAnnotationPresent(OneToMany.class);
     }
 }
