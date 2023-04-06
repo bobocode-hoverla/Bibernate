@@ -18,6 +18,7 @@ public @interface Column {
      *
      * @return column name
      */
-    String name();
-
+    String name() default "";
+    boolean unique() default false;
+    boolean nullable() default true;
 }
