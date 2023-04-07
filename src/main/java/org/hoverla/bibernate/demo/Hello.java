@@ -26,29 +26,31 @@ public class Hello {
 
         List<Customer> customers;
         try (Session session1 = sessionFactory.openSession()) {
-            customers = session1.findAllBy(Customer.class, "firstName", "Anton");
+//            customers = session1.findAllBy(Customer.class, "firstName", "Anton");
         }
-        log.info("Customers found: {}",  customers);
+//        log.info("Customers found: {}",  customers);
 
         doInTx(session -> {
-            Customer customer = session.find(Customer.class, 1L);
+//            Customer customer = session.find(Customer.class, 1L);
 
-            var project = session.find(Project.class, 1L);
+            Project project = session.find(Project.class, 1L);
+
+//            var project = session.find(Project.class, 1L);
             System.out.println(project);
 
-            Customer newCustomer = new Customer();
-            newCustomer.setFirstName("Anton");
-            newCustomer.setLastName("Prudyus");
-            newCustomer.setEmail("antonprudyus9747r424@gmail.com");
-            newCustomer.setCreatedAt(LocalDateTime.now());
-            session.persist(newCustomer);
-            log.info("Found customer: {}, ", customer);
-            Customer sameCustomer = session.find(Customer.class, 45L);
-            //should be true, 1st level cache
-            log.info("customer: {} is equal to customer {} : {} ", customer, sameCustomer, customer == sameCustomer);
-
-            sameCustomer.setFirstName("DIRTY_CHECK_999");
-            session.merge(sameCustomer);
+//            Customer newCustomer = new Customer();
+//            newCustomer.setFirstName("Anton");
+//            newCustomer.setLastName("Prudyus");
+//            newCustomer.setEmail("antonprudyus9747r424@gmail.com");
+//            newCustomer.setCreatedAt(LocalDateTime.now());
+//            session.persist(newCustomer);
+//            log.info("Found customer: {}, ", customer);
+//            Customer sameCustomer = session.find(Customer.class, 45L);
+//            //should be true, 1st level cache
+//            log.info("customer: {} is equal to customer {} : {} ", customer, sameCustomer, customer == sameCustomer);
+//
+//            sameCustomer.setFirstName("DIRTY_CHECK_999");
+//            session.merge(sameCustomer);
         });
 
     }

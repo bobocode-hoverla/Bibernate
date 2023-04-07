@@ -1,14 +1,17 @@
 package org.hoverla.bibernate.demo;
 
+import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 import org.hoverla.bibernate.annotation.*;
+import org.hoverla.bibernate.collection.LazyList;
 
 import java.time.LocalDateTime;
 import java.util.List;
 
 @ToString
 @Setter
+@Getter
 @Entity
 @Table(name = "customer")
 public class Customer {
@@ -23,5 +26,6 @@ public class Customer {
     @Column(name = "created_at")
     private LocalDateTime createdAt;
     @OneToMany
+    @Column
     private List<Project> projects;
 }

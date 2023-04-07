@@ -1,6 +1,6 @@
 package org.hoverla.bibernate.session;
 
-import jakarta.persistence.TransactionRequiredException;
+//import jakarta.persistence.TransactionRequiredException;
 import org.hoverla.bibernate.exception.session.DuplicateEntityException;
 import org.hoverla.bibernate.exception.session.SessionOperationException;
 import org.hoverla.bibernate.session.transaction.manager.TransactionManager;
