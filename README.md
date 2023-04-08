@@ -11,6 +11,7 @@ Implemented features:
 5. Transaction management. It is possible to merge a few queries together. If anything fails - the rollback is performed. Readonly mode is also supported
 6. Dirty checking mechanism. All the managed entities are compared with their own snapshot copy during a flush operation. It is turned of for readonly mode
 6. Crud operations
+7. DDL generation based on migration sql script specified in resources directory.
 
 Annotations used by the framework:
 
@@ -31,6 +32,7 @@ db.driver=org.postgresql.Driver
 db.pool.size=5
 # hikari or bibari
 db.pool.provider=hikari
+db.auto.dll=true
 ```
 2. Create an entity like this one:
 ```java
