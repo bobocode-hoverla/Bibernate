@@ -4,14 +4,14 @@ Bibernate is a Java Object-Relational Mapping (ORM) framework which can help you
 
 Implemented features:
 
-1. **** Datasource's configuration. Under the hood HikariDataSource is used to manage connection pool
-2. **** Custom connection pool called Bibari.
-3. **** First level cache. Managed entities are stored in internal cache 
-4. **** Action Queue. Write operation query will be sent only after flush or close method calls
-5. **** Transaction management. It is possible to merge a few queries together. If anything fails - the rollback is performed. Readonly mode is also supported
-6. **** Dirty checking mechanism. All the managed entities are compared with their own snapshot copy during a flush operation. It is turned of for readonly mode
-6. **** Crud operations
-7. **** DDL generation based on migration sql script specified in resources directory.
+1. #### Datasource's configuration. Under the hood HikariDataSource is used to manage connection pool
+2. #### Custom connection pool called Bibari.
+3. #### First level cache. Managed entities are stored in internal cache 
+4. #### Action Queue. Write operation query will be sent only after flush or close method calls
+5. #### Transaction management. It is possible to merge a few queries together. If anything fails - the rollback is performed. Readonly mode is also supported
+6. #### Dirty checking mechanism. All the managed entities are compared with their own snapshot copy during a flush operation. It is turned of for readonly mode
+6. #### Crud operations
+7. #### DDL generation based on migration sql script specified in resources directory.
 
 Annotations used by the framework:
 
