@@ -57,6 +57,13 @@ public class EntityUtils {
             .orElseThrow(() -> new IdNotFoundException(entityType.getSimpleName()));
     }
 
+    public static <T> Field getRelatedEntityField(Class<T> fromEntity, Class<?> toEntity) {
+        return Arrays.stream(toEntity.getDeclaredFields())
+                .filter(field -> field.getType().equals(fromEntity))
+                .findAny()
+                .orElseThrow(() -> new RuntimeException("Can not find related field"));
+    }
+
     public static boolean isIdField(Field field) {
         return field.isAnnotationPresent(Id.class);
     }

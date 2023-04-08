@@ -1,5 +1,6 @@
 package org.hoverla.bibernate.demo;
 
+import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
@@ -8,6 +9,7 @@ import org.hoverla.bibernate.annotation.*;
 @ToString
 @NoArgsConstructor
 @Entity
+@Getter
 @Table(name = "project")
 public class Project {
     @Id

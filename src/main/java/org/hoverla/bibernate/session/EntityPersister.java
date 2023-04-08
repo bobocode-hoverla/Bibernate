@@ -3,6 +3,7 @@ package org.hoverla.bibernate.session;
 import lombok.AllArgsConstructor;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
+import org.hoverla.bibernate.collection.LazyList;
 import org.hoverla.bibernate.exception.datasource.JDBCConnectionException;
 import org.hoverla.bibernate.exception.session.jdbc.PrepareStatementFailureException;
 import org.hoverla.bibernate.util.EntityKey;
@@ -11,12 +12,14 @@ import org.hoverla.bibernate.util.EntityUtils;
 import javax.sql.DataSource;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.ParameterizedType;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Supplier;
 
 import static org.hoverla.bibernate.util.EntityUtils.*;
 import static org.hoverla.bibernate.util.SqlUtils.*;
@@ -155,12 +158,27 @@ public class EntityPersister {
                 var fieldName = resolveColumnName(field);
                 var relatedFieldValue = resultSet.getObject(fieldName);
                 var relatedIdField = getIdField(relatedEntityType);
-
                 var relatedEntity = findOneBy(relatedEntityType, relatedIdField, relatedFieldValue);
-                field.setAccessible(true);
                 field.set(entity, relatedEntity);
             } else if (isMultipleObjectField(field)) {
+                log.trace("Processing collection object");
+                var parameterizedType = (ParameterizedType) field.getGenericType();
+                var parametrizedTypes = parameterizedType.getActualTypeArguments();
+                var relatedEntityType = (Class<?>) parametrizedTypes[0];
 
+                var relatedEntityField = getRelatedEntityField(entityType, relatedEntityType);
+                var entityId = getId(entity);
+
+                Supplier<List<?>> relatedEntityCollectionSupplier =
+                        () -> {
+                            try {
+                                return findAllBy(relatedEntityType, relatedEntityField, entityId);
+                            } catch (Exception e) {
+                                throw new RuntimeException("Can not find all by for %s" + relatedEntityType);
+                            }
+                        };
+                var collectionType = new LazyList<T>(relatedEntityCollectionSupplier);
+                field.set(entity, collectionType);
             } else if (isRegularField(field)) {
                 log.trace("Processing simple field {}", field.getName());
                 var columnName = resolveColumnName(field);
