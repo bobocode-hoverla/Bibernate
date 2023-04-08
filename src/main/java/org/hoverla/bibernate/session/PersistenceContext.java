@@ -55,7 +55,6 @@ public class PersistenceContext {
         return entitiesMap.containsKey(key);
     }
 
-
     public void clear() {
         entitiesMap.clear();
         snapshotCopiesMap.clear();

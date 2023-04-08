@@ -26,17 +26,40 @@ public class DriverDataSource implements DataSource {
     private final Properties driverProperties;
     private Driver driver;
 
+    /**
+     * Constructs a new {@code DriverDataSource} instance with the specified JDBC URL, driver class name, username,
+     * and password.
+     *
+     * @param jdbcUrl the JDBC URL of the database
+     * @param driverClassName the fully qualified class name of the JDBC driver to use
+     * @param username the username to use when connecting to the database
+     * @param password the password to use when connecting to the database
+     */
     public DriverDataSource(String jdbcUrl, String driverClassName, String username, String password) {
         this.jdbcUrl = jdbcUrl;
         this.driverProperties = new Properties();
         initUnderlyingDriver(jdbcUrl, driverClassName, username, password);
     }
 
+    /**
+     * Gets a connection from the underlying JDBC driver.
+     *
+     * @return a new {@link Connection} instance
+     * @throws SQLException if an error occurs while getting the connection
+     */
     @Override
     public Connection getConnection() throws SQLException {
         return driver.connect(jdbcUrl, driverProperties);
     }
 
+    /**
+     * Gets a connection from the underlying JDBC driver with the specified username and password.
+     *
+     * @param username the username to use when connecting to the database
+     * @param password the password to use when connecting to the database
+     * @return a new {@link Connection} instance
+     * @throws SQLException if an error occurs while getting the connection
+     */
     @Override
     public Connection getConnection(final String username, final String password) throws SQLException {
         final var cloned = (Properties) driverProperties.clone();
@@ -53,41 +76,17 @@ public class DriverDataSource implements DataSource {
         return driver.connect(jdbcUrl, cloned);
     }
 
-    @Override
-    public PrintWriter getLogWriter() throws SQLException {
-        throw new SQLFeatureNotSupportedException();
-    }
+    /**
 
-    @Override
-    public void setLogWriter(PrintWriter logWriter) throws SQLException {
-        throw new SQLFeatureNotSupportedException();
-    }
-
-    @Override
-    public void setLoginTimeout(int seconds) {
-        DriverManager.setLoginTimeout(seconds);
-    }
-
-    @Override
-    public int getLoginTimeout() {
-        return DriverManager.getLoginTimeout();
-    }
-
-    @Override
-    public java.util.logging.Logger getParentLogger() throws SQLFeatureNotSupportedException {
-        return driver.getParentLogger();
-    }
-
-    @Override
-    public <T> T unwrap(Class<T> iface) throws SQLException {
-        throw new SQLFeatureNotSupportedException();
-    }
-
-    @Override
-    public boolean isWrapperFor(Class<?> iface) {
-        return false;
-    }
-
+     Initializes the underlying JDBC driver by adding any provided credentials to the driver properties, then attempting
+     to load the driver specified by the given class name. If the driver is not found, it will be searched for using the
+     given JDBC URL instead. If no driver is found, a {@link UnableGetDriverInstanceException} will be thrown.
+     @param jdbcUrl the JDBC URL to use to search for the driver if it is not found by class name
+     @param driverClassName the fully qualified class name of the JDBC driver to use
+     @param username the username to use when connecting to the database
+     @param password the password to use when connecting to the database
+     @throws UnableGetDriverInstanceException if a driver cannot be found or instantiated
+     */
     private void initUnderlyingDriver(String jdbcUrl, String driverClassName, String username, String password) {
         putCredentialInProperties(username, password);
         findDriverByClassName(driverClassName);
@@ -160,5 +159,40 @@ public class DriverDataSource implements DataSource {
                 }
             }
         }
+    }
+
+    @Override
+    public PrintWriter getLogWriter() throws SQLException {
+        throw new SQLFeatureNotSupportedException();
+    }
+
+    @Override
+    public void setLogWriter(PrintWriter logWriter) throws SQLException {
+        throw new SQLFeatureNotSupportedException();
+    }
+
+    @Override
+    public void setLoginTimeout(int seconds) {
+        DriverManager.setLoginTimeout(seconds);
+    }
+
+    @Override
+    public int getLoginTimeout() {
+        return DriverManager.getLoginTimeout();
+    }
+
+    @Override
+    public java.util.logging.Logger getParentLogger() throws SQLFeatureNotSupportedException {
+        return driver.getParentLogger();
+    }
+
+    @Override
+    public <T> T unwrap(Class<T> iface) throws SQLException {
+        throw new SQLFeatureNotSupportedException();
+    }
+
+    @Override
+    public boolean isWrapperFor(Class<?> iface) {
+        return false;
     }
 }

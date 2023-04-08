@@ -16,6 +16,9 @@ public class SqlUtils {
 
     public static final String SELECT_BY_COLUMN_TEMPLATE = "SELECT * FROM %s WHERE %s = ?;";
 
+    public static final String DELETE_TEMPLATE = "DELETE FROM %s WHERE %s = ?";
+    public static final String UPDATE_TEMPLATE = "UPDATE %s SET %s WHERE %s = ?";
+
     public static String getCommaSeparatedInsertableColumns(Class<?> entityType) {
         var insertableFields = getFieldsForInsert(entityType);
         return Arrays.stream(insertableFields)

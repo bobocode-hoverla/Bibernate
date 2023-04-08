@@ -11,7 +11,7 @@ public interface ExceptionMessages {
 
     // pool
     String CANNOT_TAKE_CONNECTION_FROM_POOL = "Unable to take connection from pool";
-    String CANNOT_GET_PHYSICAL_CONNECTION = "Could not retrieve physical connection from underlying driver data source";
+    String CANNOT_GET_PHYSICAL_CONNECTION = "Could not retrieve physical connection";
 
     // transaction
     String TRANSACTION_ALREADY_BEGUN = "Transaction has already begun";

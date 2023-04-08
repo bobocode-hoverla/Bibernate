@@ -18,8 +18,17 @@ public class DefaultConfiguration implements Configuration {
     private String entitiesPackage;
     private boolean autoDdlCreation;
 
+    /**
+     * The maximum number of connections to be maintained in the connection pool.
+     * The default value is 10.
+     */
     @Builder.Default
     private Integer poolSize = 10;
+
+    /**
+     * The type of connection pool provider to use.
+     * The default value is HikariCP.
+     */
     @Builder.Default
     private ConnPoolProviderType poolProvider = ConnPoolProviderType.HIKARI;
 

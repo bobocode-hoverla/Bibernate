@@ -1,4 +1,4 @@
-package org.hoverla.bibernate.annotation.relationships;
+package org.hoverla.bibernate.annotation.relations;
 
 public @interface JoinColumn {
 }

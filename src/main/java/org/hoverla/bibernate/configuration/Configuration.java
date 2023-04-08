@@ -11,20 +11,68 @@ import java.util.Objects;
  * Configuration API used to configure datasource as to create SessionFactory
  */
 public interface Configuration {
+
+    /**
+     * Gets the JDBC URL for the data source.
+     *
+     * @return the JDBC URL
+     */
     String getUrl();
 
+    /**
+     * Gets the username for the data source.
+     *
+     * @return the username
+     */
     String getUsername();
 
+    /**
+     * Gets the password for the data source.
+     *
+     * @return the password
+     */
     String getPassword();
 
+    /**
+     * Gets the JDBC driver class for the data source.
+     *
+     * @return the JDBC driver class
+     */
     String getDriver();
 
+    /**
+     * Gets the maximum number of connections to be maintained in the connection pool.
+     *
+     * @return the maximum number of connections
+     */
     Integer getPoolSize();
 
+    /**
+     * Gets the type of connection pool provider to use.
+     *
+     * @return the connection pool provider type
+     */
     ConnPoolProviderType getPoolProvider();
+
+    /**
+     * Gets the package name containing the entity classes.
+     *
+     * @return the entity package name
+     */
     String getEntitiesPackage();
 
+    /**
+     * Builds a new session factory using the provided configuration settings.
+     *
+     * @return a new session factory
+     */
     SessionFactory buildSessionFactory();
+
+    /**
+     * Returns a boolean indicating whether automatic DDL creation is enabled.
+     *
+     * @return true if automatic DDL creation is enabled, false otherwise
+     */
     boolean isAutoDdlCreation();
 
     /**

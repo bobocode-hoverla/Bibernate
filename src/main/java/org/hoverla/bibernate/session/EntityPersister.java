@@ -5,6 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.hoverla.bibernate.exception.datasource.JDBCConnectionException;
 import org.hoverla.bibernate.exception.session.jdbc.PrepareStatementFailureException;
 import org.hoverla.bibernate.util.EntityKey;
+import org.hoverla.bibernate.util.EntityUtils;
 
 import javax.sql.DataSource;
 import java.lang.reflect.Field;
@@ -15,6 +16,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import static org.hoverla.bibernate.util.EntityUtils.getFieldsForInsert;
 import static org.hoverla.bibernate.util.EntityUtils.getIdField;
@@ -23,10 +25,7 @@ import static org.hoverla.bibernate.util.EntityUtils.isIdField;
 import static org.hoverla.bibernate.util.EntityUtils.resolveColumnName;
 import static org.hoverla.bibernate.util.EntityUtils.resolveColumnValue;
 import static org.hoverla.bibernate.util.EntityUtils.resolveTableName;
-import static org.hoverla.bibernate.util.SqlUtils.INSERT_TEMPLATE;
-import static org.hoverla.bibernate.util.SqlUtils.SELECT_BY_COLUMN_TEMPLATE;
-import static org.hoverla.bibernate.util.SqlUtils.getCommaSeparatedInsertableColumns;
-import static org.hoverla.bibernate.util.SqlUtils.getCommaSeparatedInsertableParams;
+import static org.hoverla.bibernate.util.SqlUtils.*;
 
 
 /**
@@ -39,6 +38,14 @@ public class EntityPersister {
     private final DataSource dataSource;
     private final PersistenceContext persistenceContext;
 
+    /**
+     * Inserts the given entity into the database.
+     *
+     * @param entity the entity to be inserted
+     * @param <T> the type of the entity
+     * @return the inserted entity
+     * @throws JDBCConnectionException if an error occurs while acquiring a JDBC Connection
+     */
     public <T> T insert(T entity) {
         log.trace("Inserting entity {}", entity);
         var type = entity.getClass();
@@ -157,12 +164,56 @@ public class EntityPersister {
     }
 
     public void update(Object entity) {
-        //TODO
-        throw new UnsupportedOperationException();
+        log.trace("Updating entity {}", entity);
+        var type = entity.getClass();
+        var idField = getIdField(type);
+        var id = EntityUtils.getFieldValue(entity, idField);
+        var setFields = new ArrayList<Field>();
+        for (var field : type.getDeclaredFields()) {
+            if (isIdField(field)) {
+                continue;
+            }
+            if (isColumnField(field)) {
+                setFields.add(field);
+            }
+        }
+        try (var conn = dataSource.getConnection()) {
+            var table = resolveTableName(type);
+            var setClause = setFields.stream().map(f -> resolveColumnName(f) + " = ?")
+                    .collect(Collectors.joining(", "));
+            var updateSql = String.format(UPDATE_TEMPLATE, table, setClause, resolveColumnName(idField));
+            log.trace("Update query: {}", updateSql);
+            try (var updateStatement = conn.prepareStatement(updateSql)) {
+                int i = 1;
+                for (var f : setFields) {
+                    var columnValue = EntityUtils.getFieldValue(entity, f);
+                    updateStatement.setObject(i++, columnValue);
+                }
+                updateStatement.setObject(i, id);
+                updateStatement.executeUpdate();
+            }
+        } catch (SQLException e) {
+            log.error("Unable to acquire JDBC Connection", e);
+            throw new JDBCConnectionException(e);
+        }
     }
 
     public void delete(Object entity) {
-        //TODO
-        throw new UnsupportedOperationException();
+        log.trace("Deleting entity {}", entity);
+        var type = entity.getClass();
+        var idField = getIdField(type);
+        var id = EntityUtils.getFieldValue(entity, idField);
+        try (var conn = dataSource.getConnection()) {
+            var table = resolveTableName(type);
+            var deleteSql = String.format(DELETE_TEMPLATE, table, resolveColumnName(idField));
+            log.trace("Delete query: {}", deleteSql);
+            try (var deleteStatement = conn.prepareStatement(deleteSql)) {
+                deleteStatement.setObject(1, id);
+                deleteStatement.executeUpdate();
+            }
+        } catch (SQLException e) {
+            log.error("Unable to acquire JDBC Connection", e);
+            throw new JDBCConnectionException(e);
+        }
     }
 }

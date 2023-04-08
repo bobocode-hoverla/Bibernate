@@ -96,4 +96,14 @@ public class EntityUtils {
             return resultSetValue;
         }
     }
+
+    public static  <T> Object getFieldValue(T entity, Field field) {
+        try {
+            field.setAccessible(true);
+            return field.get(entity);
+        } catch (IllegalAccessException e) {
+            log.error("Could not get value for field {} in entity {}", field.getName(), entity);
+            throw new IllegalStateException(e);
+        }
+    }
 }

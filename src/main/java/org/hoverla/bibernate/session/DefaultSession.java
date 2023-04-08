@@ -17,6 +17,13 @@ import java.util.Queue;
 
 import static java.util.Comparator.comparing;
 
+/**
+ DefaultSession is an implementation of the Session interface that provides basic CRUD
+ operations for interacting with entities.
+
+ This implementation uses an EntityPersister to persist and retrieve entities,
+ and a PersistenceContext to keep track of entities managed by the session.
+ */
 @Slf4j
 @RequiredArgsConstructor
 public class DefaultSession implements Session {
@@ -27,6 +34,10 @@ public class DefaultSession implements Session {
     private Transaction transaction;
     private TransactionFactory transactionFactory;
 
+    /**
+     Constructs a new DefaultSession object with the given DataSource.
+     @param dataSource the DataSource to use for creating the EntityPersister and TransactionFactory objects
+     */
     public DefaultSession(DataSource dataSource) {
         actionQueue = new PriorityQueue<>(comparing(EntityAction::priority));
         persistenceContext = new PersistenceContext();

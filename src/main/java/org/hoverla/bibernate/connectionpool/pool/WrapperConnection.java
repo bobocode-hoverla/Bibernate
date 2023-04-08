@@ -1,5 +1,7 @@
 package org.hoverla.bibernate.connectionpool.pool;
 
+import lombok.extern.slf4j.Slf4j;
+
 import java.sql.Array;
 import java.sql.Blob;
 import java.sql.CallableStatement;
@@ -25,6 +27,7 @@ import java.util.concurrent.Executor;
  * Connection wrapper class that overrides the close() method so that instead of
  * closing the connection, it is returned to the pool (BlockingQueue).
  */
+@Slf4j
 public class WrapperConnection implements Connection {
 
     private final Connection connection;
@@ -34,6 +37,15 @@ public class WrapperConnection implements Connection {
     public WrapperConnection(Connection connection, BlockingQueue<Connection> connectionPool) {
         this.connection = connection;
         this.connectionPool = connectionPool;
+    }
+
+    /**
+     * Instead of closing, returns connection to the pool.
+     */
+    @Override
+    public void close() {
+        log.debug("Returning connection to pool after closing");
+        connectionPool.add(this);
     }
 
     @Override
@@ -74,15 +86,6 @@ public class WrapperConnection implements Connection {
     @Override
     public void rollback() throws SQLException {
         connection.rollback();
-    }
-
-
-    /**
-     * Instead of closing, returns connection to the pool.
-     */
-    @Override
-    public void close() {
-        connectionPool.add(this);
     }
 
     @Override
