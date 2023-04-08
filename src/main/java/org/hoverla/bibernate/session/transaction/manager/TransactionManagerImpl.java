@@ -5,6 +5,7 @@ import java.sql.SQLException;
 import java.util.Optional;
 import javax.sql.DataSource;
 
+import lombok.Data;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -14,13 +15,14 @@ import org.hoverla.bibernate.session.Session;
 
 @Slf4j
 @RequiredArgsConstructor
+@Data
 public class TransactionManagerImpl implements TransactionManager {
 
     private static final Connection TRANSACTION_MARKER = new WrapperConnection(null, null);
     private final ThreadLocal<Connection> connections = new ThreadLocal<>();
-    @Getter
     private final DataSource rawDataSource;
     private final Session session;
+
     @Override
     public Connection get() throws SQLException {
         Connection delegatingConnection = connections.get();

@@ -16,9 +16,19 @@ public class DefaultConfiguration implements Configuration {
     private String password;
     private String driver;
     private String entityPackageToScan;
+    private boolean autoDdl;
 
+    /**
+     The pool size for the connection pool.
+     The default value is 10.
+     */
     @Builder.Default
     private Integer poolSize = 10;
+
+    /**
+     The connection pool provider.
+     The default value is Hikari.
+     */
     @Builder.Default
     private ConnPoolProviderType poolProvider = ConnPoolProviderType.HIKARI;
 

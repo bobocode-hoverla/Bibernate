@@ -15,7 +15,7 @@ public class DefaultSessionFactoryBuilder implements SessionFactoryBuilder {
     public SessionFactory build(Configuration conf) {
         Configuration.ConnPoolProviderType poolProvider = conf.getPoolProvider();
         DataSource dataSource = configureDatasourceBasedOnProvider(poolProvider, conf);
-        return new SessionFactoryImpl(dataSource);
+        return new SessionFactoryImpl(dataSource, conf);
     }
 
     private DataSource configureDatasourceBasedOnProvider(Configuration.ConnPoolProviderType poolProvider, Configuration conf) {

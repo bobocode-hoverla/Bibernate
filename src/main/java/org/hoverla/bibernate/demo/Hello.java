@@ -22,13 +22,22 @@ public class Hello {
     public static void main(String[] args) {
         Configuration configuration = new PropertiesConfiguration();
         DataSource bibariDataSource = new BibariDataSource(configuration);
-        sessionFactory = new SessionFactoryImpl(bibariDataSource);
+        sessionFactory = new SessionFactoryImpl(bibariDataSource, configuration);
 
         List<Customer> customers;
         try (Session session1 = sessionFactory.openSession()) {
             customers = session1.findAllBy(Customer.class, "firstName", "Anton");
         }
         log.info("Customers found: {}",  customers);
+
+        doInTx(session -> {
+            Customer customerToMerge = new Customer();
+            customerToMerge.setFirstName("Alex");
+            customerToMerge.setLastName("Klymenko");
+            customerToMerge.setEmail("overpathz@gmail.com");
+            customerToMerge.setCreatedAt(LocalDateTime.now());
+            session.persist(customerToMerge);
+        });
 
         doInTx(session -> {
             Customer customer = session.find(Customer.class, 1L);

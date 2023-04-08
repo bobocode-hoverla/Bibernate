@@ -1,5 +1,7 @@
 package org.hoverla.bibernate.demo;
 
+import lombok.AllArgsConstructor;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 import org.hoverla.bibernate.annotation.*;
@@ -10,6 +12,8 @@ import java.util.List;
 @ToString
 @Setter
 @Entity
+@AllArgsConstructor
+@NoArgsConstructor
 @Table(name = "customer")
 public class Customer {
     @Id

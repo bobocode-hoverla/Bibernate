@@ -58,6 +58,11 @@ public class PropertiesConfiguration implements Configuration {
     }
 
     @Override
+    public boolean isAutoDdl() {
+        return Boolean.parseBoolean(properties.getProperty(DbSettings.AUTO_DDL));
+    }
+
+    @Override
     public ConnPoolProviderType getPoolProvider() {
         return ConnPoolProviderType.fromValue(properties.getProperty(DbSettings.CP_PROVIDER));
     }
@@ -74,5 +79,6 @@ public class PropertiesConfiguration implements Configuration {
         String DRIVER = "db.driver";
         String POOL_SIZE = "db.pool.size";
         String CP_PROVIDER = "db.pool.provider";
+        String AUTO_DDL = "db.auto.dll";
     }
 }

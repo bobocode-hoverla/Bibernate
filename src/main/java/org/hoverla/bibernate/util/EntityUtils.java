@@ -120,6 +120,13 @@ public class EntityUtils {
                 .anyMatch(field::isAnnotationPresent);
     }
 
+    public static <T> Field getRelatedEntityField(Class<T> fromEntity, Class<?> toEntity) {
+        return Arrays.stream(toEntity.getDeclaredFields())
+                .filter(field -> field.getType().equals(fromEntity))
+                .findAny()
+                .orElseThrow(() -> new RuntimeException("Can not find related field"));
+    }
+
     public static boolean isMultipleObjectField(Field field) {
         return field.isAnnotationPresent(OneToMany.class);
     }

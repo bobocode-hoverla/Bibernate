@@ -1,6 +1,5 @@
 package org.hoverla.bibernate.session;
 
-import jakarta.persistence.TransactionRequiredException;
 import org.hoverla.bibernate.exception.session.DuplicateEntityException;
 import org.hoverla.bibernate.exception.session.SessionOperationException;
 import org.hoverla.bibernate.session.transaction.manager.TransactionManager;
@@ -32,9 +31,6 @@ public interface Session extends AutoCloseable {
      * @return the managed instance that the state was merged to
      * @throws IllegalArgumentException if instance is not an
      *         entity or is a removed entity
-     * @throws TransactionRequiredException if there is no transaction when
-     *         invoked on a container-managed entity manager of that is of type
-     *         <code>PersistenceContextType.TRANSACTION</code>
      */
     <T> T merge(T entity);
 

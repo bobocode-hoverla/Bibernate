@@ -11,18 +11,48 @@ import java.util.Objects;
  * Configuration API used to configure datasource as to create SessionFactory
  */
 public interface Configuration {
+    /**
+     Returns the URL of the data source.
+     @return the URL of the data source as a String
+     */
     String getUrl();
 
+    /**
+     Returns the username for accessing the data source.
+     @return the username as a String
+     */
     String getUsername();
 
+    /**
+
+     Returns the password for accessing the data source.
+     @return the password as a String
+     */
     String getPassword();
+    /**
 
+     Returns the driver used to connect to the data source.
+     @return the driver as a String
+     */
     String getDriver();
+    /**
 
+     Returns the size of the connection pool.
+     @return the pool size as an Integer
+     */
     Integer getPoolSize();
+    /**
 
+     Returns the type of connection pool provider.
+     @return the pool provider as a ConnPoolProviderType
+     */
     ConnPoolProviderType getPoolProvider();
+    boolean isAutoDdl();
+    /**
 
+     Builds a session factory based on the configuration settings.
+     @return the session factory as a SessionFactory object
+     */
     SessionFactory buildSessionFactory();
 
     /**

@@ -17,6 +17,7 @@ import org.hoverla.bibernate.util.EntityUtils;
 
 import javax.sql.DataSource;
 import java.lang.reflect.Field;
+import java.sql.Connection;
 import java.util.List;
 import java.util.PriorityQueue;
 import java.util.Queue;

@@ -72,7 +72,8 @@ public class BibariPool {
     private void initializePool() {
         log.debug("Initializing pool by getting physical connection from non-pooled datasource");
         for (int i = 0; i < connectionPoolSize; i++) {
-            connectionPool.add(new WrapperConnection(retrieveConnectionFromDataSource(), connectionPool));
+            WrapperConnection connection = new WrapperConnection(retrieveConnectionFromDataSource(), connectionPool);
+            connectionPool.add(connection);
         }
     }
 
